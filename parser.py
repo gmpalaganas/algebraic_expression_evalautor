@@ -44,7 +44,7 @@ def p_mult_expression_2(p):
 
 def p_mult_expression_3(p):
     '''
-    mult_expression : mult_expression exp_expression
+    mult_expression : mult_expression primary_expression
     '''
     p[0] = ASTNode('binary_expression', '*', [ p[1], p[2] ])
 
@@ -62,46 +62,33 @@ def p_exp_expression_2(p):
 
 def p_unary_expression_1(p):
     '''
-    unary_expression : paren_expression
+    unary_expression : primary_expression 
     '''
     p[0] = p[1]
 
 def p_unary_expression_2(p):
     '''
-    unary_expression : MINUS variable
+    unary_expression : MINUS primary_expression 
     '''
     p[0] = ASTNode('unary_expression', p[1], [ p[2] ])
 
-def p_paren_expression_1(p):
+def p_primary_expression_1(p):
     '''
-    paren_expression : variable
-    '''
-    p[0] = p[1]
-
-def p_paren_expression_2(p):
-    '''
-    paren_expression : LPAREN add_expression RPAREN
-    '''
-    p[0] = p[2]
-
-def p_variable_1(p):
-    '''
-    variable : constant
-    '''
-    p[0] = p[1]
-
-def p_variable_2(p):
-    '''
-    variable : VARIABLE
+    primary_expression : VARIABLE 
     '''
     p[0] = ASTNode('variable', p[1])
 
-
-def p_constant(p):
+def p_primary_expression_2(p):
     '''
-    constant : NUMBER
+    primary_expression : NUMBER 
     '''
     p[0] = ASTNode('number', p[1])
+
+def p_primary_expression_3(p):
+    '''
+    primary_expression : LPAREN add_expression RPAREN
+    '''
+    p[0] = p[2]
 
 def p_error(p):
     print 'Error!'

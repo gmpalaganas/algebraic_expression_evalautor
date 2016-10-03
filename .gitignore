@@ -1,3 +1,4 @@
 ast_log.txt
 parser.out
 *.pyc
+parsetab.py
