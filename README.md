@@ -18,3 +18,9 @@ Takes an algebraic expression as input then evaluates it.
 
 * Python 2.7.12 +
 * ply 3.9
+
+### Note on Variables
+
+An increasing value for each unique variable is assigned as the original purpose of this program is to check the equality of 2 expressions with variables (i.e. `2x = x\*x`)
+
+So for now, expressions like `2x = 2` will return True
