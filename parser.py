@@ -62,15 +62,28 @@ def p_exp_expression_2(p):
 
 def p_unary_expression_1(p):
     '''
-    unary_expression : primary_expression 
+    unary_expression : postfix_expression 
     '''
     p[0] = p[1]
 
 def p_unary_expression_2(p):
     '''
-    unary_expression : MINUS primary_expression 
+    unary_expression : MINUS postfix_expression 
     '''
     p[0] = ASTNode('unary_expression', p[1], [ p[2] ])
+
+
+def p_postfix_expression_1(p):
+    '''
+    postfix_expression : primary_expression
+    '''
+    p[0] = p[1]
+
+def p_postfix_expression_2(p):
+    '''
+    postfix_expression : LOG LPAREN postfix_expression RPAREN
+    '''
+    p[0] = ASTNode('log_expression', p[1], [ p[3] ])
 
 def p_primary_expression_1(p):
     '''

@@ -35,4 +35,4 @@ def interpret(ast,var_table=None):
         return -val1
     elif ast.type == 'log_expression':
         val1 = interpret(ast.children[0],var_table)
-        return log(val1)
+        return log(val1,10)

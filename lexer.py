@@ -21,7 +21,7 @@ t_LPAREN = r'\('
 t_RPAREN = r'\)'
 t_EQUALS = r'='
 t_POWER  = r'\^'
-t_LOG    = 'log'
+t_LOG = '_log'
 t_ignore = ' \t'
 
 def t_NUMBER(t):
