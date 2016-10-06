@@ -1,7 +1,9 @@
 from ply import lex
+from math import modf
 
 tokens = [
-        'NUMBER',
+        'INT',
+        'FLOAT',
         'VARIABLE',
         'PLUS',
         'MINUS',
@@ -12,7 +14,8 @@ tokens = [
         'EQUALS',
         'POWER',
         'LOG',
-        ]
+        ] 
+
 t_PLUS   = r'\+'
 t_MINUS  = r'-'
 t_TIMES  = r'\*'
@@ -24,7 +27,12 @@ t_POWER  = r'\^'
 t_LOG = '_log'
 t_ignore = ' \t'
 
-def t_NUMBER(t):
+def t_FLOAT(t):
+    r'\d+\.\d+'
+    t.value = float(t.value)
+    return t
+
+def t_INT(t):
     r'\d+'
     t.value = int(t.value)
     return t

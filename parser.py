@@ -62,13 +62,13 @@ def p_exp_expression_2(p):
 
 def p_unary_expression_1(p):
     '''
-    unary_expression : postfix_expression 
+    unary_expression : postfix_expression
     '''
     p[0] = p[1]
 
 def p_unary_expression_2(p):
     '''
-    unary_expression : MINUS postfix_expression 
+    unary_expression : MINUS postfix_expression
     '''
     p[0] = ASTNode('unary_expression', p[1], [ p[2] ])
 
@@ -93,11 +93,17 @@ def p_primary_expression_1(p):
 
 def p_primary_expression_2(p):
     '''
-    primary_expression : NUMBER 
+    primary_expression : INT
     '''
     p[0] = ASTNode('number', p[1])
 
 def p_primary_expression_3(p):
+    '''
+    primary_expression : FLOAT
+    '''
+    p[0] = ASTNode('number', p[1])
+
+def p_primary_expression_4(p):
     '''
     primary_expression : LPAREN add_expression RPAREN
     '''

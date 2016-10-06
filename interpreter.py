@@ -1,9 +1,10 @@
+from __future__ import division
 import parser
 from math import log
 
 def interpret(ast,var_table=None):
     if ast.type == 'number':
-        return int(ast.value)
+        return ast.value
     elif ast.type == 'variable':
         if not var_table.has_key(ast.value):
             if var_table:
