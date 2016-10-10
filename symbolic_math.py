@@ -68,6 +68,9 @@ class Variable:
 
         return ret
 
+    def copy():
+        return Variable(self.name,self.multiplier,self.exponent)
+
 class AlgebExp:
     def __init__(self,constant=0,variables=None):
         self.constant = constant
@@ -109,8 +112,7 @@ class AlgebExp:
 
         for key in holder.variables.keys():
             cur_var = holder.variables[key]
-            holder.variables[key] = \
-                    Variable(cur_var.name,-cur_var.multiplier,cur_var.exponent)
+            cur_var.multiplier = -cur_var.multiplier
 
         return holder
 
@@ -147,6 +149,9 @@ class AlgebExp:
     def __sub__(self,rhs):
         return self + (-rhs)
 
+    def __radd__(self,lhs):
+        return self + lhs
+
     def __rsub__(self,lhs):
         return lhs + (-self)
     
@@ -157,7 +162,15 @@ class AlgebExp:
             raise NameError('Variable name already exists')
     
     def copy(self):
-        return AlgebExp(self.constant,self.variables.copy())
+        ret = AlgebExp(self.constant)
+
+        keys = self.variables.keys()
+        for key in keys:
+            cur_var = self.variables[key]
+            new_var = Variable(cur_var.name, cur_var.multiplier, cur_var.exponent)
+            ret.add_variable(new_var)
+
+        return ret
 
 
 x = Variable('x')
@@ -170,5 +183,6 @@ exp2 = x + y
 exp3 = x + x
 exp4 = x + y + 3
 
-print exp
-print exp - Variable('x',1,2)
+print exp4
+print -exp4
+print exp4
