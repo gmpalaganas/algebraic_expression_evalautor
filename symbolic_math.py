@@ -33,7 +33,7 @@ class Variable:
                 return Variable(self.name,self.multiplier + rhs.multiplier,
                         exponent=self.exponent)
             else:
-                exp = AlgebExp()
+                exp = AlgebAddExp()
                 exp.add_variable(self)
                 exp.add_variable(rhs)
                 return exp 
@@ -46,7 +46,7 @@ class Variable:
                 holder.add_variable(self)
             return holder
         elif isinstance(rhs,Real):
-            holder = AlgebExp()
+            holder = AlgebAddExp()
             holder = holder + self
             holder = holder + rhs
             return holder
@@ -71,14 +71,36 @@ class Variable:
     def copy():
         return Variable(self.name,self.multiplier,self.exponent)
 
-class AlgebExp:
+class AlgebExp(object):
+
     def __init__(self,constant=0,variables=None):
         self.constant = constant
-        
+
         if variables == None:
             self.variables = {}
         else:
             self.variables = variables
+
+    def add_variable(self,variable):
+        if variable.get_exp_name() not in self.variables.keys():
+            self.variables[variable.get_exp_name()] = variable 
+        else:
+            raise NameError('Variable name %s already exists' % variable.get_exp_name())
+
+    def copy(self):
+        ret = AlgebAddExp(self.constant)
+
+        keys = self.variables.keys()
+        for key in keys:
+            cur_var = self.variables[key]
+            new_var = Variable(cur_var.name, cur_var.multiplier, cur_var.exponent)
+            ret.add_variable(new_var)
+
+        return ret
+
+class AlgebAddExp(AlgebExp):
+    def __init__(self,constant=0,variables=None):
+        super(self.__class__, self).__init__(constant,variables)
 
     def __str__(self):
         ret = ''
@@ -123,8 +145,8 @@ class AlgebExp:
             return holder
         elif isinstance(rhs,Variable):
             return rhs + self.copy()
-        elif isinstance(rhs,AlgebExp):
-            holder = AlgebExp()
+        elif isinstance(rhs,AlgebAddExp):
+            holder = AlgebAddExp()
             holder.constant = rhs.constant + self.constant
             keys = self.variables.keys() + rhs.variables.keys()
             for key in keys:
@@ -154,24 +176,7 @@ class AlgebExp:
 
     def __rsub__(self,lhs):
         return lhs + (-self)
-    
-    def add_variable(self,variable):
-        if variable.get_exp_name() not in self.variables.keys():
-            self.variables[variable.get_exp_name()] = variable
-        else:
-            raise NameError('Variable name already exists')
-    
-    def copy(self):
-        ret = AlgebExp(self.constant)
-
-        keys = self.variables.keys()
-        for key in keys:
-            cur_var = self.variables[key]
-            new_var = Variable(cur_var.name, cur_var.multiplier, cur_var.exponent)
-            ret.add_variable(new_var)
-
-        return ret
-
+   
 
 x = Variable('x')
 x1 = Variable('x',2,2)
