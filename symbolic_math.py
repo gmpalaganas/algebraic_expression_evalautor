@@ -73,9 +73,7 @@ class Variable:
 
 class AlgebExp(object):
 
-    def __init__(self,constant=0,variables=None):
-        self.constant = constant
-
+    def __init__(self,variables=None):
         if variables == None:
             self.variables = {}
         else:
@@ -100,7 +98,8 @@ class AlgebExp(object):
 
 class AlgebAddExp(AlgebExp):
     def __init__(self,constant=0,variables=None):
-        super(self.__class__, self).__init__(constant,variables)
+        super(self.__class__, self).__init__(variables)
+        self.constant = constant
 
     def __str__(self):
         ret = ''
