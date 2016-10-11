@@ -54,12 +54,39 @@ class Variable:
     def __sub__(self,rhs):
         return self + (-rhs)
 
+    def __mul__(self,rhs):
+        if isinstance(rhs,Real):
+            holder = self.copy()
+            holder.multiplier *= rhs
+        elif isinstance(rhs,Variable):
+            holder = self.copy()
+            if holder.name == rhs.name:
+                holder.multiplier *= rhs.multiplier
+                holder.exponent += rhs.exponent
+                return holder
+            else:
+                exp = AlgebMulExp(holder.multiplier * rhs.multiplier)
+                exp.add_variable(holder)
+                exp.add_variable(rhs)
+                return exp
+        elif isinstance(rhs,AlgebMulExp):
+            exp = AlgebMulExp.copy(rhs)
+            if exp.variables.has_key(self.name):
+                exp.variables[self.name].exponent += self.exponent
+            else:
+                exp.add_variable(self)
+            exp.constant *= self.multiplier
+            return exp
+ 
+    def __radd__(self,lhs):
+        return self + lhs 
+
     def __rsub__(self,lhs):
         return lhs + (-self)
-    
-    def __radd__(self,lhs):
-        return self.__add__(lhs)
 
+    def __rmul__(self,lhs):
+        return self * lhs
+   
     def get_exp_name(self):
         ret = self.name
 
@@ -172,18 +199,71 @@ class AlgebAddExp(AlgebExp):
 
     def __rsub__(self,lhs):
         return lhs + (-self)
-   
+
+    def add_variable(self,variable):
+        if variable.get_exp_name() not in self.variables.keys():
+            self.variables[variable.get_exp_name()] = variable.copy() 
+        else:
+            raise NameError('Variable name %s already exists' % variable.get_exp_name())
+
+class AlgebMulExp(AlgebExp):
+
+    def __init__(self,constant=1,variables=None):
+        super(self.__class__, self).__init__(constant,variables)
+
+    def __str__(self):
+        ret = ''
+
+        if self.constant == -1:
+            ret += '-'
+        elif self.constant == 0:
+            return '0' 
+        elif self.constant != 1:
+            ret += str(self.constant)
+
+        keys = self.variables.keys()
+        
+        for key in keys:
+            if self.variables[key].exponent != 0:
+                str_format = '%s'
+                if self.variables[key].exponent != 1:
+                    str_format = '(%s)'
+                ret += str_format % self.variables[key].get_exp_name()
+
+        return ret
+
+    def __neg__(self):
+        holder= AlgebMulExp.copy(self)
+        holder.constant = -holder.constant
+        return holder
+
+    def add_variable(self,variable):
+        if variable.name not in self.variables.keys():
+            self.variables[variable.name] = variable.copy() 
+        else:
+            raise NameError('Variable name %s already exists' % variable.name)
+
 
 x = Variable('x')
 x1 = Variable('x',2,2)
 x2 = Variable('x',1,3)
+y = Variable('y')
+z = Variable('z',20,100)
 
 exp = x + x1
-y = Variable('y')
 exp2 = x + y
 exp3 = x + x
 exp4 = x + y + 3
 
-print exp4
-print -exp4
-print exp4
+exp5 = AlgebMulExp()
+exp5.add_variable(x)
+exp5.add_variable(y)
+
+print exp2
+
+print exp5
+print -exp5
+print x * y
+print exp5 * x
+print exp5
+print exp5 * z * x1
