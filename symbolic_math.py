@@ -37,8 +37,8 @@ class Variable:
                 exp.add_variable(self)
                 exp.add_variable(rhs)
                 return exp 
-        elif isinstance(rhs,AlgebExp):
-            holder = rhs.copy()
+        elif isinstance(rhs,AlgebAddExp):
+            holder = rhs.__class__.copy(rhs)
             if rhs.variables.has_key(self.get_exp_name()):
                 holder.variables[self.get_exp_name()] = \
                         rhs.variables[self.get_exp_name()] + self
@@ -68,38 +68,35 @@ class Variable:
 
         return ret
 
-    def copy():
+    def copy(self):
         return Variable(self.name,self.multiplier,self.exponent)
 
 class AlgebExp(object):
 
-    def __init__(self,variables=None):
+    def __init__(self,constant=0,variables=None):
+        self.constant = constant
+
         if variables == None:
             self.variables = {}
         else:
             self.variables = variables
 
-    def add_variable(self,variable):
-        if variable.get_exp_name() not in self.variables.keys():
-            self.variables[variable.get_exp_name()] = variable 
-        else:
-            raise NameError('Variable name %s already exists' % variable.get_exp_name())
+    
+    @classmethod
+    def copy(cls,instance):
+        ret = cls(instance.constant)
 
-    def copy(self):
-        ret = AlgebAddExp(self.constant)
-
-        keys = self.variables.keys()
+        keys = instance.variables.keys()
         for key in keys:
-            cur_var = self.variables[key]
-            new_var = Variable(cur_var.name, cur_var.multiplier, cur_var.exponent)
+            new_var = instance.variables[key].copy() 
             ret.add_variable(new_var)
 
         return ret
 
 class AlgebAddExp(AlgebExp):
+
     def __init__(self,constant=0,variables=None):
-        super(self.__class__, self).__init__(variables)
-        self.constant = constant
+        super(self.__class__, self).__init__(constant,variables)
 
     def __str__(self):
         ret = ''
@@ -128,7 +125,7 @@ class AlgebAddExp(AlgebExp):
         return ret
     
     def __neg__(self):
-        holder = self.copy()
+        holder = AlgebAddExp.copy(self)
         holder.constant = -holder.constant
 
         for key in holder.variables.keys():
@@ -139,11 +136,11 @@ class AlgebAddExp(AlgebExp):
 
     def __add__(self,rhs):
         if isinstance(rhs,Real):
-            holder = self.copy()
+            holder = AlgebAddExp.copy(self)
             holder.constant += rhs
             return holder
         elif isinstance(rhs,Variable):
-            return rhs + self.copy()
+            return rhs + AlgebAddExp.copy(self)
         elif isinstance(rhs,AlgebAddExp):
             holder = AlgebAddExp()
             holder.constant = rhs.constant + self.constant
