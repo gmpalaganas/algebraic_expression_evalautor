@@ -29,7 +29,7 @@ class Variable:
     
     def __add__(self,rhs):
         if isinstance(rhs,Variable):
-            if self.get_exp_name() == rhs.get_exp_name():
+            if self.exponent == rhs.exponent and self.name == rhs.name:
                 return Variable(self.name,self.multiplier + rhs.multiplier,
                         exponent=self.exponent)
             else:
