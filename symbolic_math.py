@@ -95,6 +95,11 @@ class Variable:
 
         return ret
 
+    def get_abs_exp_name(self):
+        holder = self.copy()
+        holder.exponent = abs(holder.exponent)
+        return holder.get_exp_name()
+
     def copy(self):
         return Variable(self.name,self.multiplier,self.exponent)
 
@@ -212,23 +217,32 @@ class AlgebMulExp(AlgebExp):
         super(self.__class__, self).__init__(constant,variables)
 
     def __str__(self):
-        ret = ''
+        top = ''
+        bot = ''
 
         if self.constant == -1:
-            ret += '-'
+            top += '-'
         elif self.constant == 0:
             return '0' 
         elif self.constant != 1:
-            ret += str(self.constant)
+            top += str(self.constant)
 
         keys = self.variables.keys()
         
         for key in keys:
             if self.variables[key].exponent != 0:
                 str_format = '%s'
-                if self.variables[key].exponent != 1:
+                if abs(self.variables[key].exponent) != 1:
                     str_format = '(%s)'
-                ret += str_format % self.variables[key].get_exp_name()
+
+                if self.variables[key].exponent > 0:
+                    top += str_format % self.variables[key].get_exp_name()
+                else:
+                    bot += str_format % self.variables[key].get_abs_exp_name()
+
+        ret = top
+        if bot != '':
+            ret += '/%s' % bot
 
         return ret
 
@@ -244,13 +258,15 @@ class AlgebMulExp(AlgebExp):
             raise NameError('Variable name %s already exists' % variable.name)
 
 
-x = Variable('x')
-x1 = Variable('x',2,2)
-x2 = Variable('x',1,3)
-y = Variable('y')
-z = Variable('z',20,100)
+x    = Variable('x')
+x1   = Variable('x',2,2)
+x2   = Variable('x',1,3)
+y    = Variable('y')
+z    = Variable('z',20,100)
+z2   = Variable('z',5,-2)
+z3   = Variable('z',5,-1)
 
-exp = x + x1
+exp  = x + x1
 exp2 = x + y
 exp3 = x + x
 exp4 = x + y + 3
@@ -267,3 +283,5 @@ print x * y
 print exp5 * x
 print exp5
 print exp5 * z * x1
+print x * z2
+print x * z3
