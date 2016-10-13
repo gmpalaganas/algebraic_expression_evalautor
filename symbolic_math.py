@@ -302,8 +302,19 @@ class AlgebMulExp(AlgebExp):
         elif isinstance(rhs,Variable):
             return rhs * self
 
+    def __div__(self,rhs):
+        if isinstance(rhs,Real):
+            return self * (1/rhs)
+        elif isinstance(rhs,Variable):
+            return self * rhs.get_inverse()
+        elif isinstance(rhs,AlgebMulExp):
+            return self * rhs.get_inverse()
+
     def __rmul__(self,lhs):
         return self * lhs
+
+    def __rdiv__(self,lhs):
+        return self.get_inverse() * lhs
 
     def add_variable(self,variable):
         if variable.name not in self.variables.keys():
@@ -313,7 +324,10 @@ class AlgebMulExp(AlgebExp):
 
     def get_inverse(self):
         holder = AlgebMulExp.copy(self)
-        holder.constant = 1/holder.constant
+        holder.constant = 1/float(holder.constant)
+
+        if isinstance(holder.constant,float) and holder.constant.is_integer():
+            holder.constant = int(holder.constant)
 
         keys = self.variables.keys()
         for key in keys:
@@ -329,14 +343,14 @@ y    = Variable('y')
 z    = Variable('z',20,100)
 z2   = Variable('z',5,-2)
 z3   = Variable('z',5,-1)
+z4   = Variable('z')
 
 exp = x * y
 exp2 = x * z
 exp3 = x * x2
 exp4 = z * z2
+exp5 = x * z4
 
 print exp.get_inverse()
 print exp4.get_inverse()
-print x / z3
-print 2 / x
-print 2 * x
+print exp/exp5
