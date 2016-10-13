@@ -1,4 +1,5 @@
 from numbers import Real
+import re
 
 class Variable:
     def __init__(self,name,multiplier=1,exponent=1):
@@ -237,6 +238,13 @@ class AddAlgebExp(AlgebExp):
             self.variables[variable.get_exp_name()] = variable.copy() 
         else:
             raise NameError('Variable name %s already exists' % variable.get_exp_name())
+    
+    def empty(self):
+        ret = self.constant == 0
+        ret &= len(self.variables) == 0
+
+        return ret
+
 
 class MulAlgebExp(AlgebExp):
 
@@ -254,7 +262,7 @@ class MulAlgebExp(AlgebExp):
         elif self.constant != 1:
             top += str(self.constant)
 
-        keys = self.variables.keys()
+        keys = sorted(self.variables.keys())
         
         for key in keys:
             if self.variables[key].exponent != 0:
@@ -335,22 +343,67 @@ class MulAlgebExp(AlgebExp):
 
         return holder
 
-x    = Variable('x')
-x1   = Variable('x',2,2)
-x2   = Variable('x',1,3)
-x3   = Variable('x',1,-1)
-y    = Variable('y')
-z    = Variable('z',20,100)
-z2   = Variable('z',5,-2)
-z3   = Variable('z',5,-1)
-z4   = Variable('z')
+    def empty(self):
+        ret = self.constant == 0
+        ret |= len(self.variables) == 0
 
-exp = x * y
-exp2 = x * z
-exp3 = x * x2
-exp4 = z * z2
-exp5 = x * z4
+        return ret
 
-print exp.get_inverse()
-print exp4.get_inverse()
-print exp/exp5
+class ComplexAlgebExp:
+
+    def __init__(self,add_exp=None,mul_exps=None):
+        if add_exp == None:
+            self.add_exp = AddAlgebExp()
+        else:
+            self.add_exp = add_exp
+
+        if mul_exps == None:
+            self.mul_exps = []
+        else:
+            self.mul_exps = mul_exps
+
+
+    def __str__(self):
+        parts = [] 
+        
+        if not self.add_exp.empty():
+            parts = [ str(var) for var in self.add_exp.variables.values() ] 
+        
+        for mul_exp in self.mul_exps:
+            parts.append(str(mul_exp))
+
+        parts = sorted(parts, key=lambda x: re.sub('[^A-Za-z]+','',x))
+
+        ret = parts[0]
+
+        for part in parts[1:]:
+            if part[0] != '-':
+                ret+='+'
+
+            ret+=part
+
+        return ret
+
+x  = Variable('x')
+x1 = Variable('x',2,2)
+x2 = Variable('x',1,3)
+x3 = Variable('x',1,-1)
+y  = Variable('y')
+y2 = Variable('y',-2,3)
+z  = Variable('z')
+z2 = Variable('z',5,-2)
+z3 = Variable('z',5,-1)
+z4 = Variable('z',20,100)
+
+add_exp = x - y + z
+mul_exp = x * y2 * z
+mul_exp2 = x * x
+
+mul_exps = [mul_exp,mul_exp2]
+
+complex_exp = ComplexAlgebExp(add_exp,mul_exps)
+
+print add_exp
+print mul_exp
+print mul_exp2
+print complex_exp
