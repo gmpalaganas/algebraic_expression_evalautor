@@ -33,11 +33,11 @@ class Variable:
                 return Variable(self.name,self.multiplier + rhs.multiplier,
                         exponent=self.exponent)
             else:
-                exp = AlgebAddExp()
+                exp = AddAlgebExp()
                 exp.add_variable(self)
                 exp.add_variable(rhs)
                 return exp 
-        elif isinstance(rhs,AlgebAddExp):
+        elif isinstance(rhs,AddAlgebExp):
             holder = rhs.__class__.copy(rhs)
             if rhs.variables.has_key(self.get_exp_name()):
                 holder.variables[self.get_exp_name()] = \
@@ -46,7 +46,7 @@ class Variable:
                 holder.add_variable(self)
             return holder
         elif isinstance(rhs,Real):
-            holder = AlgebAddExp()
+            holder = AddAlgebExp()
             holder = holder + self
             holder = holder + rhs
             return holder
@@ -69,16 +69,16 @@ class Variable:
             if holder.name == rhs.name:
                 holder.multiplier *= rhs.multiplier
                 holder.exponent += rhs.exponent
-                exp = AlgebMulExp()
+                exp = MulAlgebExp()
                 exp.add_variable(holder)
                 return exp
             else:
-                exp = AlgebMulExp(holder.multiplier * rhs.multiplier)
+                exp = MulAlgebExp(holder.multiplier * rhs.multiplier)
                 exp.add_variable(holder)
                 exp.add_variable(rhs)
                 return exp
-        elif isinstance(rhs,AlgebMulExp):
-            exp = AlgebMulExp.copy(rhs)
+        elif isinstance(rhs,MulAlgebExp):
+            exp = MulAlgebExp.copy(rhs)
             if exp.variables.has_key(self.name):
                 exp.variables[self.name].exponent += self.exponent
             else:
@@ -92,7 +92,7 @@ class Variable:
         elif isinstance(rhs,Variable):
             holder = rhs.get_inverse()
             return self * holder
-        elif isinstance(rhs,AlgebMulExp):
+        elif isinstance(rhs,MulAlgebExp):
             holder = self.copy()
             return holder * rhs.get_inverse()
 
@@ -152,7 +152,7 @@ class AlgebExp(object):
 
         return ret
 
-class AlgebAddExp(AlgebExp):
+class AddAlgebExp(AlgebExp):
 
     def __init__(self,constant=0,variables=None):
         super(self.__class__, self).__init__(constant,variables)
@@ -184,7 +184,7 @@ class AlgebAddExp(AlgebExp):
         return ret
     
     def __neg__(self):
-        holder = AlgebAddExp.copy(self)
+        holder = AddAlgebExp.copy(self)
         holder.constant = -holder.constant
 
         for key in holder.variables.keys():
@@ -195,13 +195,13 @@ class AlgebAddExp(AlgebExp):
 
     def __add__(self,rhs):
         if isinstance(rhs,Real):
-            holder = AlgebAddExp.copy(self)
+            holder = AddAlgebExp.copy(self)
             holder.constant += rhs
             return holder
         elif isinstance(rhs,Variable):
-            return rhs + AlgebAddExp.copy(self)
-        elif isinstance(rhs,AlgebAddExp):
-            holder = AlgebAddExp()
+            return rhs + AddAlgebExp.copy(self)
+        elif isinstance(rhs,AddAlgebExp):
+            holder = AddAlgebExp()
             holder.constant = rhs.constant + self.constant
             keys = self.variables.keys() + rhs.variables.keys()
             for key in keys:
@@ -238,7 +238,7 @@ class AlgebAddExp(AlgebExp):
         else:
             raise NameError('Variable name %s already exists' % variable.get_exp_name())
 
-class AlgebMulExp(AlgebExp):
+class MulAlgebExp(AlgebExp):
 
     def __init__(self,constant=1,variables=None):
         super(self.__class__, self).__init__(constant,variables)
@@ -276,17 +276,17 @@ class AlgebMulExp(AlgebExp):
         return ret
 
     def __neg__(self):
-        holder= AlgebMulExp.copy(self)
+        holder= MulAlgebExp.copy(self)
         holder.constant = -holder.constant
         return holder
 
     def __mul__(self,rhs):
         if isinstance(rhs,Real):
-            holder = AlgebMulExp.copy(self)
+            holder = MulAlgebExp.copy(self)
             holder.constant *= rhs
             return holder
-        elif isinstance(rhs,AlgebMulExp):
-            holder = AlgebMulExp.copy(self)
+        elif isinstance(rhs,MulAlgebExp):
+            holder = MulAlgebExp.copy(self)
             holder.constant *= rhs.constant
             keys = rhs.variables.keys()
 
@@ -307,7 +307,7 @@ class AlgebMulExp(AlgebExp):
             return self * (1/rhs)
         elif isinstance(rhs,Variable):
             return self * rhs.get_inverse()
-        elif isinstance(rhs,AlgebMulExp):
+        elif isinstance(rhs,MulAlgebExp):
             return self * rhs.get_inverse()
 
     def __rmul__(self,lhs):
@@ -323,7 +323,7 @@ class AlgebMulExp(AlgebExp):
             raise NameError('Variable name %s already exists' % variable.name)
 
     def get_inverse(self):
-        holder = AlgebMulExp.copy(self)
+        holder = MulAlgebExp.copy(self)
         holder.constant = 1/float(holder.constant)
 
         if isinstance(holder.constant,float) and holder.constant.is_integer():
