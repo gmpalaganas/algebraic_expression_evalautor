@@ -12,8 +12,10 @@ class Variable:
 
         if self.multiplier == 0:
             return '0'
+
         elif self.multiplier == -1:
             return '-' + self.name
+
         elif self.exponent == 0:
             return '1'
 
@@ -33,24 +35,45 @@ class Variable:
             if self.exponent == rhs.exponent and self.name == rhs.name:
                 return Variable(self.name,self.multiplier + rhs.multiplier,
                         exponent=self.exponent)
+
             else:
                 exp = AddAlgebExp()
                 exp.add_variable(self)
                 exp.add_variable(rhs)
+
                 return exp 
+
         elif isinstance(rhs,AddAlgebExp):
-            holder = rhs.__class__.copy(rhs)
+            holder = AddAlgebExp.copy(rhs)
             if rhs.variables.has_key(self.get_exp_name()):
                 holder.variables[self.get_exp_name()] = \
                         rhs.variables[self.get_exp_name()] + self
+
             else:
                 holder.add_variable(self)
+
             return holder
+
+        elif isinstance(rhs,MulAlgebExp):
+            holder = ComplexAlgebExp()
+            holder += rhs
+            holder += self
+
+            return holder
+
         elif isinstance(rhs,Real):
             holder = AddAlgebExp()
             holder = holder + self
             holder = holder + rhs
+
             return holder
+
+        elif isinstance(rhs,ComplexAlgebExp):
+            return rhs + self
+
+        else:
+            raise OperationError(rhs)
+
 
     def __sub__(self,rhs):
         return self + (-rhs)
@@ -65,6 +88,7 @@ class Variable:
                 holder.multiplier = int(holder.multiplier)
 
             return holder
+
         elif isinstance(rhs,Variable):
             holder = self.copy()
             if holder.name == rhs.name:
@@ -72,12 +96,16 @@ class Variable:
                 holder.exponent += rhs.exponent
                 exp = MulAlgebExp()
                 exp.add_variable(holder)
+                
                 return exp
+
             else:
                 exp = MulAlgebExp(holder.multiplier * rhs.multiplier)
                 exp.add_variable(holder)
                 exp.add_variable(rhs)
+
                 return exp
+
         elif isinstance(rhs,MulAlgebExp):
             exp = MulAlgebExp.copy(rhs)
             if exp.variables.has_key(self.name):
@@ -85,16 +113,24 @@ class Variable:
             else:
                 exp.add_variable(self)
             exp.constant *= self.multiplier
+
             return exp
+
+        else:
+            raise OperationError(rhs)
 
     def __div__(self,rhs):
         if isinstance(rhs,Real):
             return self * (1/rhs)
+
         elif isinstance(rhs,Variable):
             holder = rhs.get_inverse()
+
             return self * holder
+
         elif isinstance(rhs,MulAlgebExp):
             holder = self.copy()
+
             return holder * rhs.get_inverse()
 
     def __rdiv__(self,lhs):
@@ -120,12 +156,14 @@ class Variable:
     def get_abs_exp_name(self):
         holder = self.copy()
         holder.exponent = abs(holder.exponent)
+
         return holder.get_exp_name()
 
     def get_inverse(self):
         holder = self.copy()
         holder.multiplier = 1/float(holder.multiplier)
         holder.exponent = -holder.exponent
+
         return holder
 
     def copy(self):
@@ -166,11 +204,12 @@ class AddAlgebExp(AlgebExp):
         for i, key in enumerate(keys):
             if str(self.variables[key]) == '0':
                 continue
+
             elif str(self.variables[key]) == '1':
                 constant += 1
+
             else:
                 ret += str(self.variables[key])
-            
                 if i < len(self.variables.keys()) - 1:
                     next_key = keys[i+1]
                     if self.variables[next_key].multiplier > 0: 
@@ -198,9 +237,12 @@ class AddAlgebExp(AlgebExp):
         if isinstance(rhs,Real):
             holder = AddAlgebExp.copy(self)
             holder.constant += rhs
+
             return holder
+
         elif isinstance(rhs,Variable):
             return rhs + AddAlgebExp.copy(self)
+
         elif isinstance(rhs,AddAlgebExp):
             holder = AddAlgebExp()
             holder.constant = rhs.constant + self.constant
@@ -208,12 +250,14 @@ class AddAlgebExp(AlgebExp):
             for key in keys:
                 if holder.variables.has_key(key):
                     continue
+
                 elif self.variables.has_key(key):
                     holder.add_variable(self.variables[key])
 
                     if rhs.variables.has_key(key):
                         holder.variables[key] = self.variables[key] + \
                                 rhs.variables[key]
+
                 else:
                     holder.add_variable(rhs.variables[key])
 
@@ -221,8 +265,20 @@ class AddAlgebExp(AlgebExp):
                         holder.variables[key] = rhs.variables[key] + \
                                 self.variables[key]
 
+            return holder
+        
+        elif isinstance(rhs,MulAlgebExp):
+            holder = ComplexAlgebExp()
+            holder += self
+            holder += rhs
 
             return holder
+
+        elif isinstance(rhs,ComplexAlgebExp):
+            return rhs + self
+
+        else:
+            raise OperationError(rhs)
     
     def __sub__(self,rhs):
         return self + (-rhs)
@@ -232,6 +288,12 @@ class AddAlgebExp(AlgebExp):
 
     def __rsub__(self,lhs):
         return lhs + (-self)
+
+    def __iadd__(self,rhs):
+        return self + rhs
+
+    def __isub__(self,rhs):
+        return self - rhs
 
     def add_variable(self,variable):
         if variable.get_exp_name() not in self.variables.keys():
@@ -259,6 +321,8 @@ class MulAlgebExp(AlgebExp):
             top += '-'
         elif self.constant == 0:
             return '0' 
+        elif len(self.variables) == 0:
+            return self.constant
         elif self.constant != 1:
             top += str(self.constant)
 
@@ -272,6 +336,7 @@ class MulAlgebExp(AlgebExp):
 
                 if self.variables[key].exponent > 0:
                     top += str_format % self.variables[key].get_exp_name()
+
                 else:
                     bot += str_format % self.variables[key].get_abs_exp_name()
 
@@ -286,13 +351,32 @@ class MulAlgebExp(AlgebExp):
     def __neg__(self):
         holder= MulAlgebExp.copy(self)
         holder.constant = -holder.constant
+
         return holder
+    
+    def __add__(self,rhs):
+        if isinstance(rhs,(Real,AddAlgebExp,MulAlgebExp,Variable)):
+            holder = ComplexAlgebExp()
+            holder += self
+            holder += rhs
+
+            return holder
+        elif isinstance(rhs,ComplexAlgebExp):
+            holder = rhs.copy()
+            holder += self
+
+            return holder
+
+        else:
+            raise OperationError(rhs)
 
     def __mul__(self,rhs):
         if isinstance(rhs,Real):
             holder = MulAlgebExp.copy(self)
             holder.constant *= rhs
+
             return holder
+
         elif isinstance(rhs,MulAlgebExp):
             holder = MulAlgebExp.copy(self)
             holder.constant *= rhs.constant
@@ -307,16 +391,25 @@ class MulAlgebExp(AlgebExp):
                     holder.add_variable(rhs.variables[key])
 
             return holder
+
         elif isinstance(rhs,Variable):
             return rhs * self
+
+        else:
+            raise OperationError(rhs)
 
     def __div__(self,rhs):
         if isinstance(rhs,Real):
             return self * (1/rhs)
-        elif isinstance(rhs,Variable):
+
+        elif isinstance(rhs,(Variable,MulAlgebExp)):
             return self * rhs.get_inverse()
-        elif isinstance(rhs,MulAlgebExp):
-            return self * rhs.get_inverse()
+
+    def __imul__(self,rhs):
+        return self * rhs
+
+    def __imul__(self,rhs):
+        return self / rhs
 
     def __rmul__(self,lhs):
         return self * lhs
@@ -343,6 +436,36 @@ class MulAlgebExp(AlgebExp):
 
         return holder
 
+    def var_str(self):
+        top = ''
+        bot = ''
+
+        if self.constant == 0:
+            return '0' 
+        elif len(self.variables) == 0:
+            return self.constant 
+
+        keys = sorted(self.variables.keys())
+        
+        for key in keys:
+            if self.variables[key].exponent != 0:
+                str_format = '%s'
+                if abs(self.variables[key].exponent) != 1:
+                    str_format = '(%s)'
+
+                if self.variables[key].exponent > 0:
+                    top += str_format % self.variables[key].get_exp_name()
+                else:
+                    bot += str_format % self.variables[key].get_abs_exp_name()
+
+        ret = top
+        if top == '':
+            ret += '1'
+        if bot != '':
+            ret += '/%s' % bot
+
+        return ret
+
     def empty(self):
         ret = self.constant == 0
         ret |= len(self.variables) == 0
@@ -365,6 +488,9 @@ class ComplexAlgebExp:
 
     def __str__(self):
         parts = [] 
+
+        if self.add_exp.empty() and len(self.mul_exps) == 0:
+            return '0'
         
         if not self.add_exp.empty():
             parts = [ str(var) for var in self.add_exp.variables.values() ] 
@@ -383,6 +509,61 @@ class ComplexAlgebExp:
             ret+=part
 
         return ret
+    
+    def __add__(self,rhs):
+        if isinstance(rhs, (Real,Variable,AddAlgebExp)):
+            holder = self.copy()
+            holder.add_exp += rhs
+            
+            return holder
+        elif isinstance(rhs,MulAlgebExp):
+            holder = self.copy()
+            has_no_exp = True 
+
+            for mul_exp in holder.mul_exps:
+                if mul_exp.var_str() == rhs.var_str():
+                    mul_exp.constant += rhs.constant
+                    has_no_exp = False
+                    break
+
+            if has_no_exp:
+                holder.mul_exps.append(rhs)
+
+            return holder
+
+        elif isinstance(rhs,ComplexAlgebExp):
+            holder = self.copy()
+            holder.add_exp += rhs.add_exp
+            
+            for mul_exp in rhs.mul_exps:
+                holder += mul_exp
+            
+            return holder
+
+        else:
+            raise OperationError(rhs)
+
+    def __iadd__(self,rhs):
+        return self + rhs
+
+    def __radd__(self,lhs):
+        return self + lhs
+    
+    def copy(self):
+        holder = ComplexAlgebExp()
+
+        holder.add_exp = AddAlgebExp.copy(self.add_exp)
+
+        for mul_exp in self.mul_exps:
+            holder.mul_exps.append(MulAlgebExp.copy(mul_exp))
+
+        return holder
+
+class OperationError(Exception):
+    
+    def __init__(self,arg):
+        message = 'Operation with %s not supported' % type(arg)
+        super(self.__class__,self).__init__(message)
 
 x  = Variable('x')
 x1 = Variable('x',2,2)
@@ -398,12 +579,10 @@ z4 = Variable('z',20,100)
 add_exp = x - y + z
 mul_exp = x * y2 * z
 mul_exp2 = x * x
+mul_exp3 = x * z
 
 mul_exps = [mul_exp,mul_exp2]
+mul_exps2 = [mul_exp3]
 
-complex_exp = ComplexAlgebExp(add_exp,mul_exps)
-
-print add_exp
-print mul_exp
-print mul_exp2
-print complex_exp
+print mul_exp + add_exp
+print add_exp + mul_exp
