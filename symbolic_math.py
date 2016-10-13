@@ -58,12 +58,20 @@ class Variable:
         if isinstance(rhs,Real):
             holder = self.copy()
             holder.multiplier *= rhs
+
+            if isinstance(holder.multiplier,float) and\
+                    holder.multiplier.is_integer():
+                holder.multiplier = int(holder.multiplier)
+
+            return holder
         elif isinstance(rhs,Variable):
             holder = self.copy()
             if holder.name == rhs.name:
                 holder.multiplier *= rhs.multiplier
                 holder.exponent += rhs.exponent
-                return holder
+                exp = AlgebMulExp()
+                exp.add_variable(holder)
+                return exp
             else:
                 exp = AlgebMulExp(holder.multiplier * rhs.multiplier)
                 exp.add_variable(holder)
@@ -77,6 +85,19 @@ class Variable:
                 exp.add_variable(self)
             exp.constant *= self.multiplier
             return exp
+
+    def __div__(self,rhs):
+        if isinstance(rhs,Real):
+            return self * (1/rhs)
+        elif isinstance(rhs,Variable):
+            holder = rhs.get_inverse()
+            return self * holder
+        elif isinstance(rhs,AlgebMulExp):
+            holder = self.copy()
+            return holder * rhs.get_inverse()
+
+    def __rdiv__(self,lhs):
+        return self.get_inverse() * lhs
  
     def __radd__(self,lhs):
         return self + lhs 
@@ -99,6 +120,12 @@ class Variable:
         holder = self.copy()
         holder.exponent = abs(holder.exponent)
         return holder.get_exp_name()
+
+    def get_inverse(self):
+        holder = self.copy()
+        holder.multiplier = 1/float(holder.multiplier)
+        holder.exponent = -holder.exponent
+        return holder
 
     def copy(self):
         return Variable(self.name,self.multiplier,self.exponent)
@@ -241,6 +268,8 @@ class AlgebMulExp(AlgebExp):
                     bot += str_format % self.variables[key].get_abs_exp_name()
 
         ret = top
+        if top == '':
+            ret += '1'
         if bot != '':
             ret += '/%s' % bot
 
@@ -282,6 +311,15 @@ class AlgebMulExp(AlgebExp):
         else:
             raise NameError('Variable name %s already exists' % variable.name)
 
+    def get_inverse(self):
+        holder = AlgebMulExp.copy(self)
+        holder.constant = 1/holder.constant
+
+        keys = self.variables.keys()
+        for key in keys:
+            holder.variables[key].exponent = -holder.variables[key].exponent
+
+        return holder
 
 x    = Variable('x')
 x1   = Variable('x',2,2)
@@ -294,11 +332,11 @@ z3   = Variable('z',5,-1)
 
 exp = x * y
 exp2 = x * z
-exp3 = x * x
+exp3 = x * x2
 exp4 = z * z2
 
-print exp
-print exp2
-print exp3
-print exp4
-print x * x3
+print exp.get_inverse()
+print exp4.get_inverse()
+print x / z3
+print 2 / x
+print 2 * x
