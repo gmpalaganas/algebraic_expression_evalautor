@@ -251,6 +251,31 @@ class AlgebMulExp(AlgebExp):
         holder.constant = -holder.constant
         return holder
 
+    def __mul__(self,rhs):
+        if isinstance(rhs,Real):
+            holder = AlgebMulExp.copy(self)
+            holder.constant *= rhs
+            return holder
+        elif isinstance(rhs,AlgebMulExp):
+            holder = AlgebMulExp.copy(self)
+            holder.constant *= rhs.constant
+            keys = rhs.variables.keys()
+
+            for key in keys:
+                if holder.variables.has_key(key):
+                    exponent = holder.variables[key].exponent + \
+                            rhs.variables[key].exponent
+                    holder.variables[key] = Variable(key,1,exponent)
+                else:
+                    holder.add_variable(rhs.variables[key])
+
+            return holder
+        elif isinstance(rhs,Variable):
+            return rhs * self
+
+    def __rmul__(self,lhs):
+        return self * lhs
+
     def add_variable(self,variable):
         if variable.name not in self.variables.keys():
             self.variables[variable.name] = variable.copy() 
@@ -261,27 +286,19 @@ class AlgebMulExp(AlgebExp):
 x    = Variable('x')
 x1   = Variable('x',2,2)
 x2   = Variable('x',1,3)
+x3   = Variable('x',1,-1)
 y    = Variable('y')
 z    = Variable('z',20,100)
 z2   = Variable('z',5,-2)
 z3   = Variable('z',5,-1)
 
-exp  = x + x1
-exp2 = x + y
-exp3 = x + x
-exp4 = x + y + 3
+exp = x * y
+exp2 = x * z
+exp3 = x * x
+exp4 = z * z2
 
-exp5 = AlgebMulExp()
-exp5.add_variable(x)
-exp5.add_variable(y)
-
+print exp
 print exp2
-
-print exp5
-print -exp5
-print x * y
-print exp5 * x
-print exp5
-print exp5 * z * x1
-print x * z2
-print x * z3
+print exp3
+print exp4
+print x * x3
